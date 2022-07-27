@@ -26,7 +26,7 @@ email: String
 })
 
 const photos = new Schema({
-id: Number
-url: String
+id: Number,
+url: String,
 answer_id: Number
 })
