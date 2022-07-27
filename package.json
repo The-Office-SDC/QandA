@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "sudo -u postgres psql postgres < seed.sql"
+    "seed": "sudo -u postgres psql postgres < seed.sql",
+    "start": "nodemon server/index.js"
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,8 @@
     "express": "^4.18.1",
     "pg": "^8.7.3",
     "postgres": "^3.2.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
   }
 }
