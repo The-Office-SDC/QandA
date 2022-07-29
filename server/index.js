@@ -9,6 +9,11 @@ app.use(express.json());
 
 const port = process.env.EXPRESS_PORT || 3000;
 
+var getDate = function() {
+  var date = Date.now();
+  return date;
+ }
+
 
 app.get('/qa/questions', (req, res) => {
   var { product_id, count = 5, page = 0 } = req.query;
@@ -37,7 +42,7 @@ app.get('/qa/questions', (req, res) => {
             )))))))
        FROM questions q
        INNER JOIN answers a on a.question_id = q.id
-       INNER JOIN photos p on p.answer_id = a.id
+       LEFT OUTER JOIN photos p on p.answer_id = a.id
        WHERE q.product_id = $1 and q.reported = 0
     LIMIT $2::int OFFSET $3::int`
     , [product_id, count, page], (err, result) => {
@@ -45,7 +50,9 @@ app.get('/qa/questions', (req, res) => {
         console.log(err, 'err')
         res.send('err', 400)
       } else {
-        res.send(result.rows[0]['json_build_object'])
+        if(result.rows[0]) {
+          res.send(result.rows[0]['json_build_object'])
+        } else res.status(404).send('not found')
       }
     })
 })
@@ -58,6 +65,7 @@ app.get('/qa/questions/:question_id/answers',(req, res) => {
       SELECT id a_id, question_id, body, date_written, answer_name, answer_email, reported, helpful
       FROM answers
       WHERE question_id = $1 AND reported = 0
+      LIMIT $2::int
     ), photoTable AS (
       SELECT * FROM answersTable
       LEFT JOIN photos
@@ -91,11 +99,132 @@ app.get('/qa/questions/:question_id/answers',(req, res) => {
         console.log(err, 'err')
         res.status(400).send('err')
       } else {
-        res.send(result.rows[0]['json_build_object'])
+        if(result.rows[0]['json_build_object']) {
+          res.send(result.rows[0]['json_build_object'])
+        } else res.status(404).send('not found')
+
       }
     }
   )
 })
+
+app.post('/qa/questions', (req, res) => {
+ var { body, name, email, product_id } = req.body
+ var getDate = function() {
+  var date = Date.now();
+  return date;
+ }
+  pool.query(
+    `INSERT INTO questions (product_id, body, date_written, ask_name, ask_email)
+    VALUES ($4::int, $1::text, ${getDate()}, $2::text, $3::text)`, [body, name, email, product_id], (err, result) => {
+      if (err) {
+        console.log(err)
+        res.status(400).send('err')
+      } else {
+        res.status(201).send();
+      }
+    }
+  )
+})
+
+app.post('/qa/questions/:question_id/answers', (req, res) => {
+  var { body, name, email, photos} = req.body;
+  var { question_id } = req.query;
+  pool.query(
+    `INSERT INTO answers (question_id, body, date_written, answer_name, answer_email)
+    VALUES ($4::int, $1::text, ${getDate()}, $2::text, $3::text) RETURNING id`, [body, name, email, question_id], (err, result) => {
+      if (err) {
+        console.log(err)
+        res.status(400).send()
+      } else {
+        console.log(result.rows[0].id)
+        if (photos.length > 0) {
+          photos.forEach((photo) => {
+            console.log(photo)
+            pool.query(
+              `INSERT INTO photos (answer_id, url)
+              VALUES (${result.rows[0].id}, '${photo}')`, null, (err, result) => {
+                if (err) {
+                  console.log(err)
+                } else {
+                  res.status(201).send();
+                }
+              }
+            )
+          })
+        } else {
+          res.status(201).send();
+        }
+      }
+    }
+  )
+})
+
+app.put('/qa/questions/:question_id/helpful', (req, res) => {
+  var { question_id } = req.query;
+  pool.query(
+    `UPDATE questions
+    SET helpful = helpful + 1
+    WHERE id = $1`, [question_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send();
+      } else {
+        res.status(204).send();
+      }
+    }
+  )
+})
+
+app.put('/qa/questions/:question_id/report', (req, res) => {
+  var { question_id } = req.query;
+  pool.query(
+    `UPDATE questions
+    SET reported = reported + 1
+    WHERE id = $1`, [question_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send();
+      } else {
+        res.status(204).send();
+      }
+    }
+  )
+})
+
+app.put('/qa/answers/:answer_id/helpful', (req, res) => {
+  var { answer_id } = req.query;
+  pool.query(
+    `UPDATE answers
+    SET helpful = helpful + 1
+    WHERE id = $1`, [answer_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send();
+      } else {
+        res.status(204).send();
+      }
+    }
+  )
+})
+
+app.put('/qa/answers/:answer_id/report', (req, res) => {
+  var { answer_id } = req.query;
+  pool.query(
+    `UPDATE answers
+    SET reported = reported + 1
+    WHERE id = $1`, [answer_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send();
+      } else {
+        res.status(204).send();
+      }
+    }
+  )
+})
+
+
 
 
 
