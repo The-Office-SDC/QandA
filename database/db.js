@@ -14,16 +14,11 @@ const options = {
 const pool = new Pool(options);
 
 
-const query = (text, callback) => {
+const query = (text, params, callback) => {
   pool.connect();
-  pool.query(text, (err, res) => {
-    if (err) {
-      console.log(err)
-    } else {
-      callback(res)
-    }
+  pool.query(text, params, (err, res) => {
+callback(err, res)
   })
-  pool.end();
 }
 
 module.exports.query = query;
