@@ -44,14 +44,14 @@ app.get('/qa/questions', (req, res) => {
        INNER JOIN answers a on a.question_id = q.id
        LEFT OUTER JOIN photos p on p.answer_id = a.id
        WHERE q.product_id = $1 and q.reported = 0
-    LIMIT $2::int OFFSET $3::int`
+       LIMIT $2::int OFFSET $3::int`
     , [product_id, count, page], (err, result) => {
       if (err) {
         console.log(err, 'err')
         res.send('err', 400)
       } else {
         if(result.rows[0]) {
-          res.send(result.rows[0]['json_build_object'])
+          res.status(200).send(result.rows[0]['json_build_object'])
         } else res.status(404).send('not found')
       }
     })

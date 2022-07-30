@@ -4,7 +4,7 @@
   "description": "Questions and Answers Server/Database for Atelier FEC",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node ./node_modules/mocha/bin/mocha",
     "seed": "sudo -u postgres psql postgres < seed.sql",
     "start": "nodemon server/index.js"
   },
@@ -20,10 +20,13 @@
   },
   "homepage": "https://github.com/The-Office-SDC/QandA#readme",
   "dependencies": {
+    "chai": "^4.3.6",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "mocha": "^10.0.0",
     "pg": "^8.7.3",
-    "postgres": "^3.2.4"
+    "postgres": "^3.2.4",
+    "supertest": "^6.2.4"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"
