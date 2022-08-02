@@ -1,4 +1,4 @@
-const {Pool} = require('pg');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 
@@ -15,10 +15,22 @@ const pool = new Pool(options);
 
 
 const query = (text, params, callback) => {
-  pool.connect();
-  pool.query(text, params, (err, res) => {
-callback(err, res)
-  })
+  pool.connect((err, client, done) => {
+    if (err) {
+      console.log(err)
+    }
+    client.query(text, params, (err, res) => {
+      if (err) {
+        console.log(err)
+        done();
+        callback(err, null)
+      } else {
+        done();
+        callback(null, res)
+      }
+
+    })
+  });
 }
 
 module.exports.query = query;

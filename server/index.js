@@ -17,7 +17,6 @@ var getDate = function() {
 
 app.get('/qa/questions', (req, res) => {
   var { product_id, count = 5, page = 0 } = req.query;
-  console.log(count, page)
   pool.query(
 
     `SELECT json_build_object(
@@ -25,7 +24,7 @@ app.get('/qa/questions', (req, res) => {
       'results', json_agg(json_build_object(
         'question_id', q.id,
         'questions_body', q.body,
-        'question_date', q.date_written,
+        'question_date', to_timestamp(q.date_written::bigint/1000),
         'asker_name', q.ask_name,
         'question_helpfulness', q.helpful,
         'reported', q.reported,
@@ -33,7 +32,7 @@ app.get('/qa/questions', (req, res) => {
           a.id, json_build_object(
             'id', a.id,
             'body', a.body,
-            'date', a.date_written,
+            'date', to_timestamp(a.date_written::bigint/1000),
             'answerer_name', a.answer_name,
             'helpfullness', a.helpful,
             'photos', json_build_array(json_build_object(
@@ -41,13 +40,12 @@ app.get('/qa/questions', (req, res) => {
               'url', p.url
             )))))))
        FROM questions q
-       INNER JOIN answers a on a.question_id = q.id
-       LEFT OUTER JOIN photos p on p.answer_id = a.id
+       LEFT JOIN answers a on a.question_id = q.id
+       INNER JOIN photos p on p.answer_id = a.id
        WHERE q.product_id = $1 and q.reported = 0
        LIMIT $2::int OFFSET $3::int`
     , [product_id, count, page], (err, result) => {
       if (err) {
-        console.log(err, 'err')
         res.send('err', 400)
       } else {
         if(result.rows[0]) {
@@ -80,7 +78,7 @@ app.get('/qa/questions/:question_id/answers',(req, res) => {
       GROUP BY a_id
     ), buildObj as (
       SELECT DISTINCT ON (a_id)
-      a_id answer_id, body, date_written date, answer_name, helpful helpfulness, all_photos photos
+      a_id answer_id, body, to_timestamp(date_written::bigint/1000) date, answer_name, helpful helpfulness, all_photos photos
       FROM photoTable
       LEFT JOIN photoArray
       ON photoTable.a_id = photoArray.aa_id)
@@ -96,11 +94,10 @@ app.get('/qa/questions/:question_id/answers',(req, res) => {
     `
 , [question_id, count, page], (err, result) => {
       if (err) {
-        console.log(err, 'err')
         res.status(400).send('err')
       } else {
         if(result.rows[0]['json_build_object']) {
-          res.send(result.rows[0]['json_build_object'])
+          res.status(200).send(result.rows[0]['json_build_object'])
         } else res.status(404).send('not found')
 
       }
