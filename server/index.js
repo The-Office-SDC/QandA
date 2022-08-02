@@ -94,7 +94,6 @@ app.get('/qa/questions/:question_id/answers',(req, res) => {
     `
 , [question_id, count, page], (err, result) => {
       if (err) {
-        console.log(err, 'err')
         res.status(400).send('err')
       } else {
         if(result.rows[0]['json_build_object']) {

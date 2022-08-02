@@ -20,8 +20,15 @@ const query = (text, params, callback) => {
       console.log(err)
     }
     client.query(text, params, (err, res) => {
-      done();
-      callback(err, res)
+      if (err) {
+        console.log(err)
+        done();
+        callback(err, null)
+      } else {
+        done();
+        callback(null, res)
+      }
+
     })
   });
 }
