@@ -221,6 +221,10 @@ app.put('/qa/answers/:answer_id/report', (req, res) => {
   )
 })
 
+app.get('/loaderio-75989140c8fdc3a4b82f2b374e4c60c7', (req, res) => {
+  re.status(200).send('loaderio-75989140c8fdc3a4b82f2b374e4c60c7')
+})
+
 
 
 
