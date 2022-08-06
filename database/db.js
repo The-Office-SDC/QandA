@@ -11,7 +11,6 @@ const options = {
   max: 5,
   idleTimeoutMillis: 300,
   allowExitOnIdle: true,
-  connectionTimeoutMillis: 400
 }
 
 
