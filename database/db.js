@@ -8,7 +8,8 @@ const options = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: 'questionsandanswers',
-  max: 5
+  max: 5,
+  idleTimeoutMillis: 300
 }
 
 
